@@ -1,4 +1,4 @@
-# leaderboard
+# Leaderboard
 A simple CLI application that calculates rankings based on the outcome of matches between teams participating in a league.
 
 # What do I need to build it?
