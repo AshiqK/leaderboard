@@ -16,10 +16,15 @@ After pulling the repository, navigate to the leaderboard project root directory
 
 This will pull all of thr project's dependecies and build it, and run the tests.
 
-# How do I run it?
+# How do I run/use it?
 
-I'll tell you later
+The leaderboard application takes in a filepath as a comman line argument. Make sure the input is referencing a file with well formed data and it will do the rest!
 
-# How do I use it?
+Run the below command from the root directory of the repo
 
-The leaderboard application takes in a filepath as an argument. Make sure the input is referencing a file with well formed data and it will do the rest!
+`mvn exec:java -Dexec.mainClass=com.span.digital.leaderboard.Leaderboard -Dexec.args="<path/to/input/file>"`
+
+Example:
+
+`mvn exec:java -Dexec.mainClass=com.span.digital.leaderboard.Leaderboard -Dexec.args="src/test/resources/scores_sample"`
+
