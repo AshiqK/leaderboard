@@ -14,11 +14,14 @@ After pulling the repository, navigate to the leaderboard project root directory
 
 `mvn clean install`
 
-This will pull all of thr project's dependecies and build it, and run the tests.
+This will: 
+ - pull all of the project's dependecies 
+ - build the project 
+ - Run the tests
 
 # How do I run/use it?
 
-The leaderboard application takes in a filepath as a comman line argument. Make sure the input is referencing a file with well formed data and it will do the rest!
+The leaderboard application takes in a filepath as a command line argument. Make sure the input is referencing a file with well formed data and it will do the rest!
 
 Run the below command from the root directory of the repo
 
