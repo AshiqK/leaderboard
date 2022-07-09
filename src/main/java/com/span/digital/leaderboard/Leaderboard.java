@@ -1,9 +1,7 @@
 package com.span.digital.leaderboard;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,50 +9,66 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 @Data
+@Slf4j
 public class Leaderboard 
 {
+	private static final int WINNERS_POINTS = 3;
+	private static final int LOSERS_POINTS = 0;
+	private static final int TIE_POINTS = 1;
+	private static final int TOP_RANK = 1;
+	
 	Map<String,Team> leaderBoard = new HashMap<String,Team>();
 	
-    public static void main( String[] args ) throws IOException, TeamsNotOrderedException {
+    public static void main( String[] args ) {
     	String filePath = args[0];
     	Leaderboard leaderboard =  new Leaderboard();
     	leaderboard.calculateAndPrintRankings(filePath);
     
     }
 
-	public void calculateAndPrintRankings(String filePath) throws IOException, TeamsNotOrderedException {
+	public void calculateAndPrintRankings(String filePath) {
     	List<LeagueMatch> parsedMatchResults = parseMatchResults(filePath);
     	List<Team> orderedAndRanked = calcualateRanking(parsedMatchResults);
     	formatAndPrintRankings(orderedAndRanked);
 		
 	}
 
-	private List<LeagueMatch> parseMatchResults(String matchResulultsInputPath) throws IOException, TeamsNotOrderedException {
-    	List<LeagueMatch> parsedMatchResults = new ArrayList<LeagueMatch>();
+	private List<LeagueMatch> parseMatchResults(String matchResulultsInputPath) {
+    	
+		List<LeagueMatch> parsedMatchResults = new ArrayList<LeagueMatch>();
 		
-    	Path path = Paths.get(matchResulultsInputPath);
-		BufferedReader reader = Files.newBufferedReader(path);
-		String match = reader.readLine();
-		while (match != null) {		
-			LeagueMatch leagueMatch = new LeagueMatch();
-			String[] matchResults = match.split(",");
-			leagueMatch.setLeftTeam(extractResultsForTeam(matchResults[0]));
-			leagueMatch.setRightTeam(extractResultsForTeam(matchResults[1]));
-			parsedMatchResults.add(leagueMatch);
-			match = reader.readLine();
+		try (Stream<String> stream = Files.lines(Paths.get(matchResulultsInputPath))) {
+			
+			parsedMatchResults = stream
+					.map(Leaderboard::extractLeagueMatch)
+					.collect(Collectors.toList());
+
+		} catch (IOException ioe) {
+			log.error("There was a problem reading the input file specified at location  "+matchResulultsInputPath+" .",ioe);
+		} catch (Exception e) {
+			log.error("An unexpected error occurred while processing the input specified at location  "+matchResulultsInputPath+" .",e);
 		}
 		
 		return  parsedMatchResults;
-
+		
 	}
 
-	
+	private static LeagueMatch extractLeagueMatch(String unparsedLeagueMatchLine) {
+		LeagueMatch leagueMatch = new LeagueMatch();
+		String[] matchResults = unparsedLeagueMatchLine.split(",");
+		leagueMatch.setLeftTeam(extractResultsForTeam(matchResults[0]));
+		leagueMatch.setRightTeam(extractResultsForTeam(matchResults[1]));
+		return leagueMatch;
+	}
 
-	private Team extractResultsForTeam(String matchResult) {
+	private static Team extractResultsForTeam(String matchResult) {
 		Team participant = new Team();
 		String[] matchResultTokens = matchResult.split(" ");
 		String matchScore = matchResultTokens[matchResultTokens.length - 1];
@@ -71,8 +85,7 @@ public class Leaderboard
 		return participant;
 	}
 
-	private List<Team> calcualateRanking(List<LeagueMatch> parsedMatchResults) throws IOException, TeamsNotOrderedException {
-
+	private List<Team> calcualateRanking(List<LeagueMatch> parsedMatchResults) {
 		
 		for(LeagueMatch leagueMatch : parsedMatchResults) {
 
@@ -80,27 +93,25 @@ public class Leaderboard
 			Team rightTeam = leagueMatch.getRightTeam();
 
 			if (leftTeam.getMatchScore() > rightTeam.getMatchScore()) {
-				updatePoints(leftTeam, 3);
-				updatePoints(rightTeam, 0);
+				updatePoints(leftTeam, WINNERS_POINTS);
+				updatePoints(rightTeam, LOSERS_POINTS);
 			} else if (rightTeam.getMatchScore() > leftTeam.getMatchScore()) {
-				updatePoints(rightTeam, 3);
-				updatePoints(leftTeam, 0);
+				updatePoints(rightTeam, WINNERS_POINTS);
+				updatePoints(leftTeam, LOSERS_POINTS);
 			} else if ((rightTeam.getMatchScore() == leftTeam.getMatchScore())) {
-				updatePoints(rightTeam, 1);
-				updatePoints(leftTeam, 1);
+				updatePoints(rightTeam, TIE_POINTS);
+				updatePoints(leftTeam, TIE_POINTS);
 			}
-
 			
 		}
 		
-
 		List<Team> teams = new ArrayList<>(leaderBoard.values());
 		Collections.sort(teams, new TeamComparator());
 		updateRankings(teams);
 		return teams;
 
 	}
-
+	
 	private void updatePoints(Team team, Integer points) {
 		Team leaderboardEntry = leaderBoard.get(team.getName());
 		if(leaderboardEntry == null) {
@@ -112,13 +123,13 @@ public class Leaderboard
 		
 	}
 
-	private void updateRankings(List<Team> orderedTeamsList) throws TeamsNotOrderedException {
-        final int FIRST_PLACE_RANKING = 1;
+	private void updateRankings(List<Team> orderedTeamsList) {
+
 		Team previousLeaderboardEntry = null;
         for(Team currentLeaderBoardEntry: orderedTeamsList) {
         	
         	if(previousLeaderboardEntry == null) {
-        		currentLeaderBoardEntry.setLeagueRanking(FIRST_PLACE_RANKING);
+        		currentLeaderBoardEntry.setLeagueRanking(TOP_RANK);
         	} else {
 
             	if(currentLeaderBoardEntry.getLeaguePoints() < previousLeaderboardEntry.getLeaguePoints()) {
@@ -126,7 +137,9 @@ public class Leaderboard
             	} else if(currentLeaderBoardEntry.getLeaguePoints() == previousLeaderboardEntry.getLeaguePoints()) {
             		currentLeaderBoardEntry.setLeagueRanking(previousLeaderboardEntry.getLeagueRanking());
             	} else {
-            		throw new TeamsNotOrderedException();
+            		String errorMessage = "Teams should be oredered by league points and name.";
+            		log.error(errorMessage);
+            		throw new RuntimeException(errorMessage);
             	}
 
         	}

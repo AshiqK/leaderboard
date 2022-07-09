@@ -16,7 +16,7 @@ public class LeaderboardTest {
 	Path resourceDirectory;
 	Leaderboard leaderboard;
 		
-	private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+	private ByteArrayOutputStream outContent = new ByteArrayOutputStream();
 	private final PrintStream originalOut = System.out;
 	
 	
@@ -28,6 +28,7 @@ public class LeaderboardTest {
     
     @AfterEach
     public void afterEach() {
+    	outContent = new ByteArrayOutputStream();
 	    System.setOut(originalOut);
     }
     
