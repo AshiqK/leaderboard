@@ -1,4 +1,4 @@
-package com.span.digital.leaderboard;
+package com.company.name.leaderboard;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

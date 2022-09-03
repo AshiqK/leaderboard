@@ -1,4 +1,4 @@
-package com.span.digital.leaderboard;
+package com.company.name.leaderboard;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,6 +23,7 @@ public class Leaderboard
 	private static final int LOSERS_POINTS = 0;
 	private static final int TIE_POINTS = 1;
 	private static final int TOP_RANK = 1;
+	private static final int  MAX_INPUT_FILE_RETRIES = 3;
 	
 	Map<String,Team> leaderBoard = new HashMap<String,Team>();
 	
@@ -44,17 +45,38 @@ public class Leaderboard
     	
 		List<LeagueMatch> parsedMatchResults = new ArrayList<LeagueMatch>();
 		
-		try (Stream<String> stream = Files.lines(Paths.get(matchResulultsInputPath))) {
-			
-			parsedMatchResults = stream
-					.map(Leaderboard::extractLeagueMatch)
-					.collect(Collectors.toList());
+		boolean validInputfileLocation = false;
+		int retries = 0;
+		while(!validInputfileLocation) {
+			try (Stream<String> stream = Files.lines(Paths.get(matchResulultsInputPath))) {
+				validInputfileLocation = true;
+				parsedMatchResults = stream
+						.map(Leaderboard::extractLeagueMatch)
+						.collect(Collectors.toList());
 
-		} catch (IOException ioe) {
-			log.error("There was a problem reading the input file specified at location  "+matchResulultsInputPath+" .",ioe);
-		} catch (Exception e) {
-			log.error("An unexpected error occurred while processing the input specified at location  "+matchResulultsInputPath+" .",e);
+			} catch (IOException ioe) {
+				log.error("There was a problem reading the input file specified at location  "+matchResulultsInputPath+" .",ioe);
+				System.out.println("Please specify the correct input file location, and ensure that it is readable...");
+				matchResulultsInputPath = System.console().readLine();
+				retries++;
+				if(retries > MAX_INPUT_FILE_RETRIES) {
+					System.out.println("You've exceeded the maximum number of tries to re-enter the file path. Please check the exact file path and ensure the file in readable by this user before trying again.");
+					break;
+				}
+			} catch (Exception e) {
+				log.error("An unexpected error occurred while processing the input specified at location  "+matchResulultsInputPath+" .",e);
+				System.out.println("Please specify the correct input file location, and ensure that it is readable...");
+				matchResulultsInputPath = System.console().readLine();
+				retries++;
+				if(retries > MAX_INPUT_FILE_RETRIES) {
+					System.out.println("You've exceeded the maximum number of tries to re-enter the file path. Please check the exact file path and ensure the file in readable by this user before trying again.");
+					break;
+				}
+			
+			}
+
 		}
+		
 		
 		return  parsedMatchResults;
 		

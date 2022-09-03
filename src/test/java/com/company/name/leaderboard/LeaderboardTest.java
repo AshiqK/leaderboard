@@ -1,4 +1,4 @@
-package com.span.digital.leaderboard;
+package com.company.name.leaderboard;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
